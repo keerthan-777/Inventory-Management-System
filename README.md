@@ -1,11 +1,11 @@
 # Inventory-Management-System
 _Add and manage products, Track stock, Low-stock alerts, Dashboard and reports_
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 **1. What will your project do?**
 
-Imagine a shop that sells mobile phones, laptops, accessories, and other products. The owner needs to know which products are available, how much stock remains, and which products need restocking.
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Your application will allow the owner to:
+Imagine a shop that sells mobile phones, laptops, accessories, and other products. The owner needs to know which products are available, how much stock remains, and which products need restocking. 
+
+**Your application will allow the owner to:**
 ------------------------------------------
 Add and manage products
 
@@ -22,8 +22,8 @@ Show products whose quantities have fallen below a defined threshold.
 Dashboard and reports
 
 Display total products, total units, stock value, and low-stock products.
-##########################################################################################################################################
-2. Technologies you'll use
+
+**2. Technologies you'll use**
 Technology	What you'll learn
 Python	Backend programming and business logic
 Flask	Routes, request handling, and API development
@@ -36,8 +36,8 @@ Postman	API testing
 Git and GitHub	Version control
 Render	Online deployment
 
-3. How the complete application works
-##########################################################################################################################################
+**3. How the complete application works**
+
 Frontend — HTML, CSS, JavaScript
 
 Product forms, stock tables, dashboard
@@ -63,8 +63,8 @@ For example, when a shop receives 20 new keyboards:
 5. The frontend refreshes and shows the new quantity.
 This is valuable practice because you learn both API development and how to implement real business rules.
 
-4. REST API endpoints you'll build
-##########################################################################################################################################
+**4. REST API endpoints you'll build**
+
 Method	Endpoint	Purpose
 GET	/api/products	List all products
 GET	/api/products/1	View a specific product
@@ -76,8 +76,7 @@ GET	/api/dashboard	Retrieve dashboard statistics
 GET	/api/stock-movements	View stock history
 You can also implement search, category filtering, pagination, and low-stock filtering.
 
-6. Database design
-#############################
+**6. Database design**
 Instead of keeping everything in one table, create separate tables for the main entities.
  Products
 id, name, SKU, category_id, purchase_price, selling_price, quantity, reorder_level
@@ -91,9 +90,8 @@ id, product_id, movement_type, quantity, created_at, notes
 Relationship: one category can contain many products, and one product can have many stock movement records.
 
 This structure gives you practice with primary keys, foreign keys, relationships, SQL joins, and database transactions.
-###################################
-# 6. Build it in stages           #
-###################################
+**6. Build it in stages   **   
+
 1. Stage 1: Set up Flask and create a basic API.
 2. Stage 2: Connect SQLite using SQLAlchemy and implement product CRUD operations.
 3. Stage 3: Add categories, stock updates, validation, and stock movement history.
