@@ -1,0 +1,1341 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        header {
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        header p {
+            color: #64748b;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            padding: 22px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+            min-width: 0;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 12px;
+            font-size: 15px;
+            color: #64748b;
+        }
+
+        .stat-card p {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .financial-card {
+            border-top: 4px solid #2563eb;
+        }
+
+        .financial-card:nth-child(2) {
+            border-top-color: #059669;
+        }
+
+        .financial-card:nth-child(3) {
+            border-top-color: #7c3aed;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: 2px solid #bfdbfe;
+            border-color: #2563eb;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: #111827;
+            margin-right: 5px;
+        }
+
+        .btn-delete {
+            background: #dc2626;
+            color: white;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 13px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f8fafc;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .low-stock {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .stock-alert {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 7px;
+            background: #fff1f2;
+            border-left: 4px solid #dc2626;
+        }
+
+        .success-message {
+            color: #047857;
+            margin-top: 12px;
+        }
+
+        .error-message {
+            color: #dc2626;
+            margin-top: 12px;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card h2 {
+            margin-bottom: 20px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 290px;
+        }
+
+        .chart-message {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .empty-message {
+            padding: 20px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        @media (max-width: 800px) {
+            body {
+                padding: 14px;
+            }
+
+            .stats,
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card p {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <header>
+        <h1>Inventory Management System</h1>
+        <p>Manage your products, monitor stock, and track inventory value.</p>
+    </header>
+
+    <!-- Dashboard Statistics -->
+    <section class="stats">
+        <div class="card stat-card">
+            <h3>Total Products</h3>
+            <p id="totalProducts">0</p>
+        </div>
+
+        <div class="card stat-card">
+            <h3>Total Units in Stock</h3>
+            <p id="totalUnits">0</p>
+        </div>
+
+        <div class="card stat-card">
+            <h3>Low-Stock Products</h3>
+            <p id="lowStockCount">0</p>
+        </div>
+    </section>
+
+    <!-- Financial Summary -->
+    <section class="stats">
+        <div class="card stat-card financial-card">
+            <h3>Total Inventory Cost</h3>
+            <p id="inventoryCost">₹0</p>
+        </div>
+
+        <div class="card stat-card financial-card">
+            <h3>Potential Sales Value</h3>
+            <p id="salesValue">₹0</p>
+        </div>
+
+        <div class="card stat-card financial-card">
+            <h3>Potential Profit</h3>
+            <p id="potentialProfit">₹0</p>
+        </div>
+    </section>
+
+    <!-- Inventory Charts -->
+    <section class="charts-container">
+        <div class="card chart-card">
+            <h2>Products by Category</h2>
+            <div class="chart-wrapper">
+                <canvas id="categoryChart"></canvas>
+            </div>
+            <p id="categoryChartMessage" class="chart-message"></p>
+        </div>
+
+        <div class="card chart-card">
+            <h2>Stock Quantity by Product</h2>
+            <div class="chart-wrapper">
+                <canvas id="stockChart"></canvas>
+            </div>
+            <p id="stockChartMessage" class="chart-message"></p>
+        </div>
+
+        <div class="card chart-card">
+            <h2>Stock Status Overview</h2>
+            <div class="chart-wrapper">
+                <canvas id="stockStatusChart"></canvas>
+            </div>
+            <p id="stockStatusChartMessage" class="chart-message"></p>
+        </div>
+    </section>
+
+    <!-- Add Product -->
+    <section class="card section">
+        <h2>Add New Product</h2>
+
+        <form id="addProductForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Product Name</label>
+                    <input id="name" name="name" required maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="sku">SKU</label>
+                    <input id="sku" name="sku" required maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input id="category" name="category" required maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <input id="quantity" name="quantity" type="number"
+                           min="0" step="1" value="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="purchase_price">Purchase Price (₹)</label>
+                    <input id="purchase_price" name="purchase_price"
+                           type="number" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="selling_price">Selling Price (₹)</label>
+                    <input id="selling_price" name="selling_price"
+                           type="number" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="reorder_level">Reorder Level</label>
+                    <input id="reorder_level" name="reorder_level"
+                           type="number" min="0" step="1" value="5" required>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button type="submit" class="btn-primary">Add Product</button>
+            </div>
+
+            <p id="addMessage" role="status"></p>
+        </form>
+    </section>
+
+    <!-- Edit Product -->
+    <section class="card section" id="editSection" hidden>
+        <h2>Edit Product</h2>
+
+        <form id="editProductForm">
+            <input type="hidden" id="editId">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="editName">Product Name</label>
+                    <input id="editName" required maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="editSku">SKU</label>
+                    <input id="editSku" required maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="editCategory">Category</label>
+                    <input id="editCategory" required maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="editQuantity">Quantity</label>
+                    <input id="editQuantity" type="number" min="0"
+                           step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editPurchasePrice">Purchase Price (₹)</label>
+                    <input id="editPurchasePrice" type="number"
+                           min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editSellingPrice">Selling Price (₹)</label>
+                    <input id="editSellingPrice" type="number"
+                           min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editReorderLevel">Reorder Level</label>
+                    <input id="editReorderLevel" type="number"
+                           min="0" step="1" required>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button type="submit" class="btn-primary">Save Changes</button>
+                <button type="button" class="btn-secondary"
+                        id="cancelEdit">Cancel</button>
+            </div>
+
+            <p id="editMessage" role="status"></p>
+        </form>
+    </section>
+    
+<!-- Stock Management -->
+<section class="card section">
+    <h2>Stock Management</h2>
+
+    <form id="stockMovementForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="stockProduct">Select Product</label>
+                <select id="stockProduct" required>
+                    <option value="">Choose a product</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="movementType">Movement Type</label>
+                <select id="movementType" required>
+                    <option value="in">Stock In (+)</option>
+                    <option value="out">Stock Out (-)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="movementQuantity">Quantity</label>
+                <input id="movementQuantity" type="number"
+                       min="1" step="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="movementReason">Reason</label>
+                <input id="movementReason" type="text"
+                       maxlength="200"
+                       placeholder="e.g. Supplier delivery or sale">
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button type="submit" class="btn-primary" id="stockSubmitButton">
+                Record Stock Movement
+            </button>
+        </div>
+
+        <p id="stockMovementMessage" role="status"></p>
+    </form>
+</section>
+
+<!-- Stock Movement History -->
+<section class="card section">
+    <h2>Stock Movement History</h2>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody id="stockMovementTableBody">
+                <tr>
+                    <td colspan="5" class="empty-message">
+                        Loading stock movements...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button type="button" class="btn-secondary"
+            id="refreshMovements" style="margin-top: 15px;">
+        Refresh History
+    </button>
+</section>
+
+    <!-- Low Stock Alerts -->
+    <section class="card section">
+        <h2>Low-Stock Alerts</h2>
+        <div id="lowStockAlerts">
+            <p class="empty-message">Loading stock alerts...</p>
+        </div>
+    </section>
+
+    <!-- Product Inventory -->
+    <section class="card section">
+        <h2>Product Inventory</h2>
+
+        <div class="filter-row">
+            <input id="searchInput" type="search"
+                   placeholder="Search by name or SKU">
+
+            <select id="categoryFilter">
+                <option value="">All Categories</option>
+            </select>
+
+            <button id="resetFilters" class="btn-secondary" type="button">
+                Reset Filters
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Purchase Price</th>
+                        <th>Selling Price</th>
+                        <th>Reorder Level</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                    <tr>
+                        <td colspan="9" class="empty-message">
+                            Loading products...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p id="tableMessage" role="status"></p>
+    </section>
+
+</div>
+
+<script>
+    // Chart.js is loaded on demand, with a fallback CDN.
+    // This prevents "Chart is not defined" if the first CDN fails.
+    let chartJsPromise = null;
+
+    function loadChartJs() {
+        if (window.Chart) {
+            return Promise.resolve(window.Chart);
+        }
+
+        if (chartJsPromise) {
+            return chartJsPromise;
+        }
+
+        chartJsPromise = new Promise((resolve, reject) => {
+            const sources = [
+                "https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js",
+                "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.8/chart.umd.min.js"
+            ];
+
+            function trySource(index) {
+                if (window.Chart) {
+                    resolve(window.Chart);
+                    return;
+                }
+
+                if (index >= sources.length) {
+                    reject(new Error(
+                        "Chart.js could not load. Check your internet connection or CDN access."
+                    ));
+                    return;
+                }
+
+                const script = document.createElement("script");
+                script.src = sources[index];
+                script.onload = () => {
+                    if (window.Chart) {
+                        resolve(window.Chart);
+                    } else {
+                        trySource(index + 1);
+                    }
+                };
+
+                script.onerror = () => {
+                    script.remove();
+                    trySource(index + 1);
+                };
+
+                document.head.appendChild(script);
+            }
+
+            trySource(0);
+        });
+
+        return chartJsPromise;
+    }
+
+    let allProducts = [];
+    let categoryChart = null;
+    let stockChart = null;
+    let stockStatusChart = null;
+
+    const currencyFormatter = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 2
+    });
+
+    function formatCurrency(value) {
+        return currencyFormatter.format(Number(value) || 0);
+    }
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]);
+    }
+
+    async function fetchJSON(url, options = {}) {
+        const response = await fetch(url, options);
+
+        if (!response.ok) {
+            let message = `Request failed (${response.status})`;
+
+            try {
+                const body = await response.json();
+                message = body.error || body.message || message;
+            } catch (_) {
+                // Keep the HTTP status message if no JSON body is returned.
+            }
+
+            throw new Error(message);
+        }
+
+        if (response.status === 204) {
+            return null;
+        }
+
+        return response.json();
+    }
+
+    function setMessage(elementId, message, isError = false) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = message
+            ? (isError ? "error-message" : "success-message")
+            : "";
+    }
+
+    async function loadProducts() {
+        const search = document.getElementById("searchInput").value.trim();
+        const category = document.getElementById("categoryFilter").value;
+
+        const params = new URLSearchParams();
+
+        if (search) params.set("search", search);
+        if (category) params.set("category", category);
+
+        const query = params.toString();
+        const url = "/api/products" + (query ? "?" + query : "");
+
+        try {
+            const filteredProducts = await fetchJSON(url);
+            renderProducts(filteredProducts);
+
+            // Fetch all products for statistics, alerts and charts.
+            allProducts = await fetchJSON("/api/products");
+
+            updateDashboardStats(allProducts);
+            updateCategories(allProducts);
+            updateStockProductOptions(allProducts);
+            updateLowStockAlerts(allProducts);
+
+await loadInventorySummary();
+await loadInventoryCharts(allProducts);
+await loadStockMovements();
+
+            await loadInventorySummary();
+            await loadInventoryCharts(allProducts);
+
+            setMessage("tableMessage", "");
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+
+            document.getElementById("productTableBody").innerHTML =
+                `<tr><td colspan="9" class="empty-message">` +
+                `Unable to load products. ${escapeHTML(error.message)}` +
+                `</td></tr>`;
+
+            setMessage("tableMessage", error.message, true);
+        }
+    }
+
+    function renderProducts(products) {
+        const tbody = document.getElementById("productTableBody");
+
+        if (!Array.isArray(products) || products.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="empty-message">
+                        No products found.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = products.map(product => {
+            const low = Number(product.quantity) <=
+                Number(product.reorder_level);
+
+            return `
+                <tr>
+                    <td>${escapeHTML(product.id)}</td>
+                    <td>${escapeHTML(product.name)}</td>
+                    <td>${escapeHTML(product.sku)}</td>
+                    <td>${escapeHTML(product.category)}</td>
+                    <td class="${low ? "low-stock" : ""}">
+                        ${escapeHTML(product.quantity)}
+                    </td>
+                    <td>${escapeHTML(formatCurrency(product.purchase_price))}</td>
+                    <td>${escapeHTML(formatCurrency(product.selling_price))}</td>
+                    <td>${escapeHTML(product.reorder_level)}</td>
+                    <td>
+                        <button type="button" class="btn-edit"
+                            data-action="edit"
+                            data-id="${escapeHTML(product.id)}">
+                            Edit
+                        </button>
+                        <button type="button" class="btn-delete"
+                            data-action="delete"
+                            data-id="${escapeHTML(product.id)}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>`;
+        }).join("");
+    }
+
+    function updateDashboardStats(products) {
+        const totalUnits = products.reduce(
+            (sum, product) => sum + Number(product.quantity || 0), 0
+        );
+
+        const lowStock = products.filter(
+            product => Number(product.quantity) <=
+                       Number(product.reorder_level)
+        );
+
+        document.getElementById("totalProducts").textContent =
+            products.length;
+
+        document.getElementById("totalUnits").textContent =
+            totalUnits.toLocaleString("en-IN");
+
+        document.getElementById("lowStockCount").textContent =
+            lowStock.length;
+    }
+
+    async function loadInventorySummary() {
+        try {
+            const summary = await fetchJSON("/api/inventory-summary");
+
+            document.getElementById("inventoryCost").textContent =
+                formatCurrency(summary.total_inventory_cost);
+
+            document.getElementById("salesValue").textContent =
+                formatCurrency(summary.potential_sales_value);
+
+            document.getElementById("potentialProfit").textContent =
+                formatCurrency(summary.potential_profit);
+        } catch (error) {
+            console.error("Error loading financial summary:", error);
+            setMessage("tableMessage",
+                "Products loaded, but the financial summary could not be loaded.",
+                true);
+        }
+    }
+
+    function updateCategories(products) {
+        const select = document.getElementById("categoryFilter");
+        const selectedValue = select.value;
+
+        const categories = [...new Set(
+            products.map(product => product.category).filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b));
+
+        select.innerHTML = '<option value="">All Categories</option>';
+
+        categories.forEach(category => {
+            const option = document.createElement("option");
+            option.value = category;
+            option.textContent = category;
+            select.appendChild(option);
+        });
+
+        if (categories.includes(selectedValue)) {
+            select.value = selectedValue;
+        }
+    }
+    
+function updateStockProductOptions(products) {
+    const select = document.getElementById("stockProduct");
+    const previousValue = select.value;
+
+    select.innerHTML = '<option value="">Choose a product</option>';
+
+    products.forEach(product => {
+        const option = document.createElement("option");
+        option.value = product.id;
+        option.textContent =
+            `${product.name} (Stock: ${product.quantity})`;
+        select.appendChild(option);
+    });
+
+    if (products.some(
+        product => String(product.id) === previousValue
+    )) {
+        select.value = previousValue;
+    }
+}
+
+async function loadStockMovements() {
+    const tbody = document.getElementById("stockMovementTableBody");
+
+    try {
+        const movements = await fetchJSON("/api/stock-movements");
+
+        if (!movements.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty-message">
+                        No stock movements recorded yet.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = movements.map(movement => {
+            const isStockIn = movement.movement_type === "in";
+            const typeLabel = isStockIn ? "Stock In" : "Stock Out";
+            const quantityLabel = isStockIn
+                ? `+${movement.quantity}`
+                : `-${movement.quantity}`;
+
+            const date = new Date(movement.created_at);
+            const formattedDate = Number.isNaN(date.getTime())
+                ? "Unknown date"
+                : date.toLocaleString("en-IN");
+
+            return `
+                <tr>
+                    <td>${escapeHTML(formattedDate)}</td>
+                    <td>${escapeHTML(movement.product_name)}</td>
+                    <td style="color:${isStockIn ? "#047857" : "#dc2626"};font-weight:bold;">
+                        ${typeLabel}
+                    </td>
+                    <td>${escapeHTML(quantityLabel)}</td>
+                    <td>${escapeHTML(movement.reason)}</td>
+                </tr>`;
+        }).join("");
+    } catch (error) {
+        console.error("Error loading stock movements:", error);
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-message">
+                    Unable to load history: ${escapeHTML(error.message)}
+                </td>
+            </tr>`;
+    }
+}
+
+
+    function updateLowStockAlerts(products) {
+        const container = document.getElementById("lowStockAlerts");
+
+        const lowStockProducts = products.filter(
+            product => Number(product.quantity) <=
+                       Number(product.reorder_level)
+        );
+
+        if (lowStockProducts.length === 0) {
+            container.innerHTML =
+                '<p class="empty-message">All products are sufficiently stocked.</p>';
+            return;
+        }
+
+        container.innerHTML = lowStockProducts.map(product => `
+            <div class="stock-alert">
+                <strong>${escapeHTML(product.name)}</strong>
+                — Available: ${escapeHTML(product.quantity)},
+                Reorder level: ${escapeHTML(product.reorder_level)}
+            </div>
+        `).join("");
+    }
+
+    async function loadInventoryCharts(products) {
+        const messageIds = [
+            "categoryChartMessage",
+            "stockChartMessage",
+            "stockStatusChartMessage"
+        ];
+
+        try {
+            await loadChartJs();
+
+            // 1. Products by category
+            const categoryCounts = {};
+
+            products.forEach(product => {
+                const category = product.category || "Uncategorized";
+                categoryCounts[category] =
+                    (categoryCounts[category] || 0) + 1;
+            });
+
+            const categoryLabels = Object.keys(categoryCounts);
+            const categoryValues = Object.values(categoryCounts);
+
+            if (categoryChart) categoryChart.destroy();
+
+            categoryChart = new Chart(
+                document.getElementById("categoryChart"),
+                {
+                    type: "doughnut",
+                    data: {
+                        labels: categoryLabels.length
+                            ? categoryLabels
+                            : ["No products"],
+                        datasets: [{
+                            label: "Number of Products",
+                            data: categoryValues.length
+                                ? categoryValues
+                                : [1],
+                            backgroundColor: [
+                                "#2563eb", "#059669", "#f59e0b",
+                                "#7c3aed", "#db2777", "#0891b2",
+                                "#ea580c", "#64748b"
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "bottom" }
+                        }
+                    }
+                }
+            );
+
+            // 2. Stock quantity by product
+            if (stockChart) stockChart.destroy();
+
+            stockChart = new Chart(
+                document.getElementById("stockChart"),
+                {
+                    type: "bar",
+                    data: {
+                        labels: products.map(product => product.name),
+                        datasets: [{
+                            label: "Stock Quantity",
+                            data: products.map(
+                                product => Number(product.quantity) || 0
+                            ),
+                            backgroundColor: "#3b82f6",
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            },
+                            x: {
+                                ticks: {
+                                    autoSkip: true,
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                }
+            );
+
+            // 3. In-stock versus low-stock products
+            const lowStockCount = products.filter(
+                product => Number(product.quantity) <=
+                           Number(product.reorder_level)
+            ).length;
+
+            const inStockCount = products.length - lowStockCount;
+
+            if (stockStatusChart) stockStatusChart.destroy();
+
+            stockStatusChart = new Chart(
+                document.getElementById("stockStatusChart"),
+                {
+                    type: "doughnut",
+                    data: {
+                        labels: ["In Stock", "Low Stock"],
+                        datasets: [{
+                            data: products.length
+                                ? [inStockCount, lowStockCount]
+                                : [0, 0],
+                            backgroundColor: ["#059669", "#dc2626"]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "bottom" }
+                        }
+                    }
+                }
+            );
+
+            messageIds.forEach(id => {
+                document.getElementById(id).textContent =
+                    products.length ? "" : "Add products to see your inventory data.";
+            });
+
+        } catch (error) {
+            console.error("Error loading inventory charts:", error);
+
+            messageIds.forEach(id => {
+                document.getElementById(id).textContent =
+                    "Charts could not load. Check your internet connection and browser console.";
+            });
+        }
+    }
+
+
+document.getElementById("stockMovementForm")
+    .addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        const button = document.getElementById("stockSubmitButton");
+
+        setMessage("stockMovementMessage", "");
+
+        const productId = Number(
+            document.getElementById("stockProduct").value
+        );
+
+        const quantity = Number(
+            document.getElementById("movementQuantity").value
+        );
+
+        if (
+            !Number.isSafeInteger(productId) ||
+            productId <= 0 ||
+            !Number.isSafeInteger(quantity) ||
+            quantity <= 0
+        ) {
+            setMessage(
+                "stockMovementMessage",
+                "Select a product and enter a positive whole-number quantity.",
+                true
+            );
+            return;
+        }
+
+        const data = {
+            product_id: productId,
+            movement_type: document.getElementById("movementType").value,
+            quantity: quantity,
+            reason: document.getElementById("movementReason").value.trim()
+        };
+
+        button.disabled = true;
+
+        try {
+            const result = await fetchJSON("/api/stock-movements", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            form.reset();
+
+            setMessage(
+                "stockMovementMessage",
+                `${result.message} Current stock: ${result.movement.current_stock}`
+            );
+
+            await loadProducts();
+        } catch (error) {
+            setMessage(
+                "stockMovementMessage",
+                error.message,
+                true
+            );
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+document.getElementById("refreshMovements")
+    .addEventListener("click", loadStockMovements);
+
+    // Add product
+    document.getElementById("addProductForm")
+        .addEventListener("submit", async event => {
+            event.preventDefault();
+            setMessage("addMessage", "");
+
+            const form = event.currentTarget;
+            const formData = new FormData(form);
+            const product = {};
+
+            for (const [key, value] of formData.entries()) {
+                product[key] = value.trim();
+            }
+
+            ["quantity", "reorder_level"].forEach(key => {
+                product[key] = Number(product[key]);
+            });
+
+            ["purchase_price", "selling_price"].forEach(key => {
+                product[key] = Number(product[key]);
+            });
+
+            try {
+                await fetchJSON("/api/products", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(product)
+                });
+
+                form.reset();
+                document.getElementById("quantity").value = 0;
+                document.getElementById("reorder_level").value = 5;
+
+                setMessage("addMessage", "Product added successfully.");
+                await loadProducts();
+            } catch (error) {
+                setMessage("addMessage", error.message, true);
+            }
+        });
+
+    // Product table actions
+    document.getElementById("productTableBody")
+        .addEventListener("click", async event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+
+            const productId = button.dataset.id;
+            const action = button.dataset.action;
+
+            if (action === "edit") {
+                const product = allProducts.find(
+                    item => String(item.id) === String(productId)
+                );
+
+                if (!product) {
+                    setMessage("tableMessage",
+                        "Product not found. Please refresh the dashboard.",
+                        true);
+                    return;
+                }
+
+                document.getElementById("editId").value = product.id;
+                document.getElementById("editName").value = product.name;
+                document.getElementById("editSku").value = product.sku;
+                document.getElementById("editCategory").value = product.category;
+                document.getElementById("editQuantity").value = product.quantity;
+                document.getElementById("editPurchasePrice").value =
+                    product.purchase_price;
+                document.getElementById("editSellingPrice").value =
+                    product.selling_price;
+                document.getElementById("editReorderLevel").value =
+                    product.reorder_level;
+
+                document.getElementById("editSection").hidden = false;
+                document.getElementById("editSection")
+                    .scrollIntoView({ behavior: "smooth" });
+
+                setMessage("editMessage", "");
+                return;
+            }
+
+            if (action === "delete") {
+                const confirmed = confirm(
+                    "Are you sure you want to delete this product?"
+                );
+
+                if (!confirmed) return;
+
+                button.disabled = true;
+
+                try {
+                    await fetchJSON(`/api/products/${productId}`, {
+                        method: "DELETE"
+                    });
+
+                    setMessage("tableMessage",
+                        "Product deleted successfully.");
+                    await loadProducts();
+                } catch (error) {
+                    setMessage("tableMessage", error.message, true);
+                    button.disabled = false;
+                }
+            }
+        });
+
+    // Save edited product
+    document.getElementById("editProductForm")
+        .addEventListener("submit", async event => {
+            event.preventDefault();
+            setMessage("editMessage", "");
+
+            const productId = document.getElementById("editId").value;
+
+            const product = {
+                name: document.getElementById("editName").value.trim(),
+                sku: document.getElementById("editSku").value.trim(),
+                category: document.getElementById("editCategory").value.trim(),
+                quantity: Number(document.getElementById("editQuantity").value),
+                purchase_price: Number(
+                    document.getElementById("editPurchasePrice").value
+                ),
+                selling_price: Number(
+                    document.getElementById("editSellingPrice").value
+                ),
+                reorder_level: Number(
+                    document.getElementById("editReorderLevel").value
+                )
+            };
+
+            try {
+                await fetchJSON(`/api/products/${productId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(product)
+                });
+
+                document.getElementById("editSection").hidden = true;
+                setMessage("tableMessage", "Product updated successfully.");
+                await loadProducts();
+            } catch (error) {
+                setMessage("editMessage", error.message, true);
+            }
+        });
+
+    // Cancel editing
+    document.getElementById("cancelEdit").addEventListener("click", () => {
+        document.getElementById("editSection").hidden = true;
+        setMessage("editMessage", "");
+    });
+
+    // Search and filter
+    let searchTimeout;
+
+    document.getElementById("searchInput").addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(loadProducts, 250);
+    });
+
+    document.getElementById("categoryFilter")
+        .addEventListener("change", loadProducts);
+
+    document.getElementById("resetFilters")
+        .addEventListener("click", () => {
+            document.getElementById("searchInput").value = "";
+            document.getElementById("categoryFilter").value = "";
+            loadProducts();
+        });
+
+    // Start the dashboard
+    document.addEventListener("DOMContentLoaded", loadProducts);
+</script>
+</body>
+</html>
