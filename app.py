@@ -1,12 +1,28 @@
-
-from flask import Flask, jsonify, request, render_template
+from dotenv import load_dotenv
+load_dotenv()
+from flask_wtf.csrf import CSRFProtect
+from io import BytesIO
+from flask import send_file
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
+from flask import (
+    Flask, jsonify, request, render_template,
+    redirect, url_for, session, flash
+)
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from werkzeug.security import generate_password_hash, check_password_hash
 import math
 import os
-from models import db, Product, StockMovement
-from models import db, Product
+from models import db, Product, StockMovement, User
+
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.environ.get(
+    "SECRET_KEY",
+    "dev-only-change-this-secret-key"
+)
+csrf = CSRFProtect(app)
 
 # --------------------------------------------------
 # 1. Flask and database configuration
@@ -23,6 +39,137 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+    
+# --------------------------------------------------
+# User authentication protection
+# --------------------------------------------------
+
+
+@app.before_request
+def require_login():
+    public_endpoints = {
+        "login",
+        "register",
+        "static",
+        "health_check",
+    }
+
+
+    if request.endpoint in public_endpoints:
+        return None
+
+    if session.get("user_id") is None:
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Please log in first"}), 401
+
+        return redirect(url_for("login"))
+
+    return None
+
+
+# --------------------------------------------------
+# User registration, login, and logout
+# --------------------------------------------------
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not username or not email or not password:
+            flash("All fields are required.", "error")
+            return render_template("register.html")
+
+        if len(username) > 80:
+            flash("Username must be at most 80 characters.", "error")
+            return render_template("register.html")
+
+        if len(email) > 120 or "@" not in email:
+            flash("Please enter a valid email address.", "error")
+            return render_template("register.html")
+
+        if len(password) < 8:
+            flash("Password must contain at least 8 characters.", "error")
+            return render_template("register.html")
+
+        existing_user = User.query.filter(
+            db.or_(
+                User.username.ilike(username),
+                User.email == email
+            )
+        ).first()
+
+        if existing_user:
+            flash("Username or email is already registered.", "error")
+            return render_template("register.html")
+
+        user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password)
+        )
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("Username or email is already registered.", "error")
+            return render_template("register.html")
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.exception("Registration database error")
+            flash("Unable to create your account. Please try again.", "error")
+            return render_template("register.html")
+
+        flash("Registration successful. Please log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        username_or_email = request.form.get(
+            "username_or_email", ""
+        ).strip()
+        password = request.form.get("password", "")
+
+        user = User.query.filter(
+            db.or_(
+                User.username.ilike(username_or_email),
+                User.email == username_or_email.lower()
+            )
+        ).first()
+
+        if user and check_password_hash(user.password_hash, password):
+            session.clear()
+            session["user_id"] = user.id
+            session["username"] = user.username
+            return redirect(url_for("dashboard"))
+
+        flash("Invalid username/email or password.", "error")
+
+    return render_template("login.html")
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
+
+
+
 
 
 # --------------------------------------------------
@@ -219,9 +366,7 @@ def handle_internal_server_error(error):
 
 @app.route("/")
 def home():
-    return jsonify({
-        "message": "Inventory Management System API is running!"
-    }), 200
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/dashboard")
@@ -491,9 +636,6 @@ def inventory_summary():
     }), 200
 
 
-from sqlalchemy.exc import SQLAlchemyError
-
-
 @app.route("/api/stock-movements", methods=["POST"])
 def create_stock_movement():
     data = request.get_json(silent=True)
@@ -610,6 +752,149 @@ def get_stock_movements():
         }
         for movement in movements
     ]), 200
+
+@app.route("/reports/export.xlsx")
+def export_inventory_report():
+    products = Product.query.order_by(Product.name).all()
+    movements = (
+        StockMovement.query
+        .order_by(StockMovement.created_at.desc())
+        .all()
+    )
+
+    workbook = Workbook()
+
+    # 1. Inventory worksheet
+    inventory = workbook.active
+    inventory.title = "Inventory"
+
+    inventory.append([
+        "ID", "Product Name", "SKU", "Category", "Quantity",
+        "Purchase Price (INR)", "Selling Price (INR)",
+        "Reorder Level", "Inventory Cost (INR)",
+        "Potential Sales (INR)", "Potential Profit (INR)", "Stock Status"
+    ])
+
+    for product in products:
+        quantity = product.quantity
+        cost = quantity * product.purchase_price
+        sales = quantity * product.selling_price
+        profit = sales - cost
+        status = (
+            "Low Stock"
+            if quantity <= product.reorder_level
+            else "In Stock"
+        )
+
+        inventory.append([
+            product.id, product.name, product.sku, product.category,
+            quantity, product.purchase_price, product.selling_price,
+            product.reorder_level, cost, sales, profit, status
+        ])
+
+    # 2. Low-stock worksheet
+    low_stock = workbook.create_sheet("Low Stock")
+    low_stock.append([
+        "ID", "Product Name", "SKU", "Category",
+        "Quantity", "Reorder Level"
+    ])
+
+    for product in products:
+        if product.quantity <= product.reorder_level:
+            low_stock.append([
+                product.id, product.name, product.sku, product.category,
+                product.quantity, product.reorder_level
+            ])
+
+    # 3. Stock-movement history worksheet
+    history = workbook.create_sheet("Stock Movements")
+    history.append([
+        "Movement ID", "Date & Time", "Product", "Movement Type",
+        "Quantity", "Reason"
+    ])
+
+    for movement in movements:
+        history.append([
+            movement.id,
+            movement.created_at,
+            movement.product.name if movement.product else "Unknown",
+            movement.movement_type,
+            movement.quantity,
+            movement.reason
+        ])
+
+    # 4. Summary worksheet
+    summary = workbook.create_sheet("Summary")
+
+    total_units = sum(p.quantity for p in products)
+    total_cost = sum(p.quantity * p.purchase_price for p in products)
+    total_sales = sum(p.quantity * p.selling_price for p in products)
+    total_profit = total_sales - total_cost
+    low_count = sum(
+        1 for p in products if p.quantity <= p.reorder_level
+    )
+
+    summary.append(["Inventory Summary", "Value"])
+    summary.append(["Total Products", len(products)])
+    summary.append(["Total Units in Stock", total_units])
+    summary.append(["Low-Stock Products", low_count])
+    summary.append(["Total Inventory Cost (INR)", total_cost])
+    summary.append(["Potential Sales Value (INR)", total_sales])
+    summary.append(["Potential Profit (INR)", total_profit])
+
+    # Format worksheet headers and columns
+    for sheet in workbook.worksheets:
+        sheet.freeze_panes = "A2"
+        sheet.auto_filter.ref = sheet.dimensions
+
+        for cell in sheet[1]:
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor="1D4ED8"
+            )
+            cell.alignment = Alignment(
+                horizontal="center",
+                vertical="center"
+            )
+
+        for column_cells in sheet.columns:
+            column_letter = get_column_letter(column_cells[0].column)
+            max_length = max(
+                len(str(cell.value)) if cell.value is not None else 0
+                for cell in column_cells
+            )
+            sheet.column_dimensions[column_letter].width = min(
+                max(max_length + 2, 12), 35
+            )
+
+    # Format monetary columns in the Inventory worksheet
+    for row in inventory.iter_rows(min_row=2, min_col=6, max_col=11):
+        for cell in row:
+            cell.number_format = '₹#,##0.00'
+
+    # Format monetary values in the Summary worksheet
+    for row in range(5, 8):
+        summary.cell(row=row, column=2).number_format = '₹#,##0.00'
+
+    # Format movement timestamps in Excel
+    for row in range(2, history.max_row + 1):
+        history.cell(row=row, column=2).number_format = "yyyy-mm-dd hh:mm"
+
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="inventory_report.xlsx",
+        mimetype=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        )
+    )
+
 
 # --------------------------------------------------
 # 12. Start Flask

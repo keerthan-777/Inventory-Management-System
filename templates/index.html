@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Management System</title>
 
@@ -276,16 +277,68 @@
                 font-size: 24px;
             }
         }
+        .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.header-actions form {
+    margin: 0;
+}
+
+.report-button {
+    display: inline-block;
+    padding: 10px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        align-items: flex-start;
+    }
+}
     </style>
 </head>
 
 <body>
 <div class="container">
 
-    <header>
+    <header class="dashboard-header">
+    <div>
         <h1>Inventory Management System</h1>
-        <p>Manage your products, monitor stock, and track inventory value.</p>
-    </header>
+        <p>Manage products, monitor stock, and track inventory value.</p>
+        <p>Welcome, {{ session.get('username', 'User') }}!</p>
+    </div>
+
+    <div class="header-actions">
+        <a href="{{ url_for('export_inventory_report') }}"
+           class="btn-primary report-button">
+            Download Excel Report
+        </a>
+
+        <form method="POST" action="{{ url_for('logout') }}">
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+    <button type="submit" class="btn-secondary">Logout</button>
+</form>
+    </div>
+</header>
 
     <!-- Dashboard Statistics -->
     <section class="stats">
@@ -675,28 +728,44 @@
         })[character]);
     }
 
-    async function fetchJSON(url, options = {}) {
-        const response = await fetch(url, options);
+    
+async function fetchJSON(url, options = {}) {
+    const method = (options.method || "GET").toUpperCase();
+    const headers = new Headers(options.headers || {});
 
-        if (!response.ok) {
-            let message = `Request failed (${response.status})`;
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+        const csrfToken = document.querySelector(
+            'meta[name="csrf-token"]'
+        )?.content;
 
-            try {
-                const body = await response.json();
-                message = body.error || body.message || message;
-            } catch (_) {
-                // Keep the HTTP status message if no JSON body is returned.
-            }
-
-            throw new Error(message);
+        if (csrfToken) {
+            headers.set("X-CSRFToken", csrfToken);
         }
-
-        if (response.status === 204) {
-            return null;
-        }
-
-        return response.json();
     }
+
+    const response = await fetch(url, {
+        ...options,
+        headers
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+
+    const data = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+    if (!response.ok) {
+        const message =
+            typeof data === "object" && data !== null
+                ? (data.error || data.message || "Request failed")
+                : (data || "Request failed");
+
+        throw new Error(message);
+    }
+
+    return data;
+}
+
 
     function setMessage(elementId, message, isError = false) {
         const element = document.getElementById(elementId);
@@ -733,9 +802,6 @@
 await loadInventorySummary();
 await loadInventoryCharts(allProducts);
 await loadStockMovements();
-
-            await loadInventorySummary();
-            await loadInventoryCharts(allProducts);
 
             setMessage("tableMessage", "");
         } catch (error) {

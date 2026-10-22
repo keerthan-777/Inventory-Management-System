@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            max-width: calc(100% - 60px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #0001;
+        }
+
+        input, button {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 6px;
+        }
+
+        input {
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .error { color: #dc2626; }
+        .success { color: #15803d; }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>Create Account</h2>
+
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <input
+                name="username"
+                placeholder="Username"
+                maxlength="80"
+                autocomplete="username"
+                required
+            >
+
+            <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                maxlength="120"
+                autocomplete="email"
+                required
+            >
+
+            <input
+                name="password"
+                type="password"
+                placeholder="Password (minimum 8 characters)"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+
+            <button type="submit">Register</button>
+        </form>
+
+        <p>
+            Already registered?
+            <a href="{{ url_for('login') }}">Log in</a>
+        </p>
+    </div>
+</body>
+</html>
