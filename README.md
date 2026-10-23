@@ -1,11 +1,11 @@
 # Inventory-Management-System
 _Add and manage products, Track stock, Low-stock alerts, Dashboard and reports_
 
-**1. What will your project do?**
+**1. What will  project do?**
 
 Imagine a shop that sells mobile phones, laptops, accessories, and other products. The owner needs to know which products are available, how much stock remains, and which products need restocking. 
 
-**Your application will allow the owner to:**
+** application will allow the owner to:**
 ------------------------------------------
 Add and manage products
 
